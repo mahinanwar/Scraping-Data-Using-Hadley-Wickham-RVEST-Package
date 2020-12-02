@@ -1,0 +1,87 @@
+---
+title: "Scraping Data Using Rvest Package"
+author: "Mahin Anwar"
+output: html_document
+---
+
+```{r}
+#Load Libraries
+library(rvest)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+library(scales)
+library(xml2)
+library(purrr)
+
+```
+
+```{r}
+#IMDB Scraping (Scraping a rating)
+
+#URL for 'The Queens Gambit'
+url <- 'https://www.imdb.com/title/tt10048342/?ref_=hm_fanfav_tt_1_pd_fp1'
+
+rating <- url %>%
+  read_html() %>%
+  html_nodes('strong span') %>%
+  html_text()
+
+rating
+
+
+```
+```{r}
+#SuperBowl Data (Scraping a table)
+
+url2 <- "https://en.wikipedia.org/wiki/List_of_Super_Bowl_champions"
+my_html <- read_html(url2)
+my_tables <- html_nodes(my_html,'table')
+superbowlchampions <- my_html %>%
+  html_nodes('table')%>%
+  .[2]%>%
+  html_table(fill = TRUE)
+
+superbowlchampions
+```
+
+```{r}
+#America Ninja Warrior Parsing URL's seasons 3 to 10
+
+url3 <- 'https://www.imdb.com/title/tt1587934/episodes?season='
+seasons <- 3:10
+final_url <- paste(url, seasons)
+final_url
+```
+
+```{r}
+#America Ninja Warrior CSS Selectors
+
+title <- '#episodes_content strong a'
+rating <- '.ipl-rating-star.small .ipl-rating-star__rating'
+```
+
+```{r}
+#American Ninja Warrior Rvest
+scrape_ninja <- function(final_url){
+final_title <- final_url %>%
+  read_html()%>%
+  html_nodes(title)%>%
+  html_text()%>%
+  as.data.frame()
+
+final_rating <- final_url%>%
+  read_html()%>%
+  html_nodes(rating)%>%
+  html_text()%>%
+  as.data.frame()
+
+ninja_final <- cbind(final_title, final_rating)
+names(ninja_final) <- c('Title', 'Rating')
+ninja_final <- as.data.frame(ninja_final)
+
+}
+
+ninja_data <- map_df(final_url, scrape_ninja)
+ninja_data
+``` 
